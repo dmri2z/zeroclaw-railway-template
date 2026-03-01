@@ -20,7 +20,9 @@ RUN apt-get update && apt-get install -y \
 
 # Download pre-built ZeroClaw binary from GitHub releases
 ARG ZEROCLAW_VERSION=v0.1.7
-RUN curl -fsSL "https://github.com/zeroclaw-labs/zeroclaw/releases/download/${ZEROCLAW_VERSION}/zeroclaw-x86_64-unknown-linux-gnu.tar.gz" \
+ARG TARGETARCH
+RUN ARCH=$([ "$TARGETARCH" = "arm64" ] && echo "aarch64" || echo "x86_64") && \
+    curl -fsSL "https://github.com/zeroclaw-labs/zeroclaw/releases/download/${ZEROCLAW_VERSION}/zeroclaw-${ARCH}-unknown-linux-gnu.tar.gz" \
     | tar -xz -C /usr/local/bin zeroclaw \
     && chmod +x /usr/local/bin/zeroclaw
 

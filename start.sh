@@ -269,6 +269,7 @@ generate_managed_config() {
 
 default_provider = "openrouter"
 default_model = "${DEFAULT_MODEL}"
+default_temperature = 0.7
 
 [autonomy]
 level = "full"
@@ -277,6 +278,9 @@ allowed_commands = []
 forbidden_paths = []
 max_actions_per_hour = 100
 max_cost_per_day_cents = 1000
+
+[channels_config]
+cli = false
 
 [channels_config.telegram]
 bot_token = "${BOT_TOKEN}"

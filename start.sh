@@ -11,6 +11,26 @@ set -e
 # Tickets: P2-01, P2-02, P2-03, P2-04, P2-07, P2-08, P2-11
 # ═══════════════════════════════════════════════════════════════════
 
+# ─── Guard: prevent double execution ─────────────────────────────
+LOCKFILE="/tmp/start.sh.lock"
+if [ -f "$LOCKFILE" ]; then
+    EXISTING_PID=$(cat "$LOCKFILE" 2>/dev/null)
+    if [ -n "$EXISTING_PID" ] && kill -0 "$EXISTING_PID" 2>/dev/null; then
+        echo "start.sh is already running (PID: $EXISTING_PID). Exiting duplicate."
+        exit 0
+    fi
+    echo "Stale lockfile found (PID $EXISTING_PID not running). Cleaning up."
+fi
+echo $$ > "$LOCKFILE"
+trap "rm -f $LOCKFILE" EXIT
+
+# Kill any stale zeroclaw daemon from a previous run (persistent volume may survive redeploys)
+if pgrep -x zeroclaw > /dev/null 2>&1; then
+    echo "WARNING: Found stale zeroclaw process(es). Killing before fresh start."
+    pkill -x zeroclaw || true
+    sleep 1
+fi
+
 CONFIG_FILE="/data/.zeroclaw/config.toml"
 IDENTITY_FILE="/data/.zeroclaw/IDENTITY.md"
 DAEMON_PID=""
@@ -240,13 +260,6 @@ validate_tenant_periodic() {
     done
 }
 
-# ─── P2-02: Health Endpoint ──────────────────────────────────────
-
-start_health_server() {
-    # Node.js HTTP server — more reliable than netcat for persistent health endpoint
-    node /app/health-server.js &
-}
-
 # ─── P2-01: Generate Managed Config ──────────────────────────────
 
 generate_managed_config() {
@@ -364,7 +377,12 @@ start_managed() {
     local validation_pid=$!
     echo "Periodic validation started (PID: $validation_pid)"
 
-    # Start ZeroClaw daemon
+    # Start ZeroClaw daemon (with pre-flight check for unexpected auto-start)
+    if pgrep -x zeroclaw > /dev/null 2>&1; then
+        echo "WARNING: zeroclaw process already running before explicit start. Killing it."
+        pkill -x zeroclaw || true
+        sleep 1
+    fi
     echo "Starting ZeroClaw daemon..."
     zeroclaw daemon &
     DAEMON_PID=$!

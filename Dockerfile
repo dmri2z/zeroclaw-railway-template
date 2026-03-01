@@ -64,4 +64,5 @@ EXPOSE 8080
 
 WORKDIR /data
 
-CMD ["/app/start.sh"]
+# No CMD — Railway's startCommand in railway.toml handles this.
+# Having both CMD and startCommand can cause double execution.

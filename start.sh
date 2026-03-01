@@ -279,6 +279,12 @@ forbidden_paths = []
 max_actions_per_hour = 100
 max_cost_per_day_cents = 1000
 
+[gateway]
+host = "0.0.0.0"
+port = 8080
+require_pairing = false
+allow_public_bind = true
+
 [channels_config]
 cli = false
 
@@ -318,7 +324,7 @@ notify_provision_complete() {
     # Poll local health endpoint until it responds (max 60s)
     local deadline=$((SECONDS + 60))
     while [ $SECONDS -lt $deadline ]; do
-        if curl -sf http://localhost:3000/health > /dev/null 2>&1; then
+        if curl -sf http://localhost:8080/health > /dev/null 2>&1; then
             echo "Daemon is healthy."
             break
         fi
@@ -353,8 +359,6 @@ start_managed() {
     # Export OPENROUTER_API_KEY as ZEROCLAW_API_KEY (ZeroClaw reads this env var)
     export ZEROCLAW_API_KEY="${OPENROUTER_API_KEY}"
 
-    # Health server already started at top of script (HEALTH_PID)
-
     # Start periodic tenant validation in background (P2-03)
     validate_tenant_periodic &
     local validation_pid=$!
@@ -370,7 +374,7 @@ start_managed() {
     notify_provision_complete &
 
     # Trap to clean up on exit
-    trap "kill $HEALTH_PID $validation_pid $DAEMON_PID 2>/dev/null; exit" EXIT TERM INT
+    trap "kill $validation_pid $DAEMON_PID 2>/dev/null; exit" EXIT TERM INT
 
     # Wait for daemon — if it dies, cleanup happens via trap
     wait $DAEMON_PID
@@ -382,12 +386,6 @@ start_managed() {
 # ═══════════════════════════════════════════════════════════════════
 # MAIN EXECUTION
 # ═══════════════════════════════════════════════════════════════════
-
-# ─── Start health server immediately (Railway healthcheck) ───────
-
-node /app/health-server.js &
-HEALTH_PID=$!
-echo "Health endpoint started on :3000 (PID: $HEALTH_PID)"
 
 # ─── Shared Setup ─────────────────────────────────────────────────
 

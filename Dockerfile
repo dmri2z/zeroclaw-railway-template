@@ -51,17 +51,16 @@ RUN echo '# ZeroClaw aliases' >> /etc/bash.bashrc && \
     echo 'alias brew-install="brew install"' >> /etc/bash.bashrc && \
     echo 'eval "$(/data/.linuxbrew/bin/brew shellenv)"' >> /etc/bash.bashrc
 
-# Copy startup script and health server
+# Copy startup script
 COPY start.sh /app/start.sh
-COPY health-server.js /app/health-server.js
 RUN chmod +x /app/start.sh
 
 # Set environment - HOME=/data makes ZeroClaw use /data/.zeroclaw
 ENV HOME=/data
 ENV SHELL=/bin/bash
 
-# Expose health server port
-EXPOSE 3000
+# Expose ZeroClaw gateway port
+EXPOSE 8080
 
 WORKDIR /data
 

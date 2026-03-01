@@ -347,10 +347,7 @@ start_managed() {
     # Export OPENROUTER_API_KEY as ZEROCLAW_API_KEY (ZeroClaw reads this env var)
     export ZEROCLAW_API_KEY="${OPENROUTER_API_KEY}"
 
-    # Start health server in background (P2-02)
-    start_health_server
-    local health_pid=$!
-    echo "Health endpoint started on :8080 (PID: $health_pid)"
+    # Health server already started at top of script (HEALTH_PID)
 
     # Start periodic tenant validation in background (P2-03)
     validate_tenant_periodic &
@@ -367,7 +364,7 @@ start_managed() {
     notify_provision_complete &
 
     # Trap to clean up on exit
-    trap "kill $health_pid $validation_pid $DAEMON_PID 2>/dev/null; exit" EXIT TERM INT
+    trap "kill $HEALTH_PID $validation_pid $DAEMON_PID 2>/dev/null; exit" EXIT TERM INT
 
     # Wait for daemon — if it dies, cleanup happens via trap
     wait $DAEMON_PID
@@ -379,6 +376,12 @@ start_managed() {
 # ═══════════════════════════════════════════════════════════════════
 # MAIN EXECUTION
 # ═══════════════════════════════════════════════════════════════════
+
+# ─── Start health server immediately (Railway healthcheck) ───────
+
+node /app/health-server.js &
+HEALTH_PID=$!
+echo "Health endpoint started on :8080 (PID: $HEALTH_PID)"
 
 # ─── Shared Setup ─────────────────────────────────────────────────
 

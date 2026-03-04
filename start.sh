@@ -203,6 +203,9 @@ render_identity() {
     # Append budget info
     append_budget_section
 
+    # Append Claude Code section (conditional on bot_config)
+    append_claude_code_section
+
     echo "IDENTITY.md rendered."
 }
 
@@ -244,6 +247,55 @@ install_claude_code() {
     else
         echo "  WARNING: Claude Code CLI install failed. Bot will start without it."
     fi
+}
+
+# ─── Claude Code identity section (conditional on bot_config) ────
+
+append_claude_code_section() {
+    if [ -z "$BOT_CONFIG_JSON" ]; then
+        return
+    fi
+
+    local enabled
+    enabled=$(echo "$BOT_CONFIG_JSON" | jq -r '.claude_code_enabled // false')
+
+    if [ "$enabled" != "true" ]; then
+        echo "  Claude Code section skipped (not enabled in bot_config)"
+        return
+    fi
+
+    echo "  Appending Claude Code section to IDENTITY.md..."
+    cat >> "$IDENTITY_FILE" << 'CLAUDE_CODE'
+
+## Claude Code (Remote Control)
+
+Your server has Claude Code CLI installed. Users can launch a Remote Control session to get full Claude Code access in their browser.
+
+### `/claude` command
+
+When the user sends `/claude`:
+
+1. Check if a `claude` process is already running (`pgrep -f "claude remote-control"`). If yes, tell the user a session is already active and remind them to use `/claude exit` first.
+2. Run: `cd /data/workspace && claude remote-control 2>&1 &`
+3. Wait 3 seconds, then read the output to capture the session URL (looks like `https://claude.ai/remote/...`)
+4. Send the URL to the user as a clickable link
+5. Tell them to open it in their browser — they will authenticate with their own Claude account
+
+### `/claude exit` command
+
+When the user sends `/claude exit`:
+
+1. Run: `pkill -f "claude remote-control"` to kill the session
+2. Confirm to the user that the session was terminated
+
+### Important
+
+- Only one Remote Control session at a time
+- User authenticates on their own device — no login needed on the server
+- The session runs in `/data/workspace` — files persist across sessions
+- If `claude` command is not found, tell the user Claude Code CLI is not installed and suggest contacting support
+CLAUDE_CODE
+    echo "  Claude Code section appended."
 }
 
 # ─── Tenant Validation ───────────────────────────────────────────

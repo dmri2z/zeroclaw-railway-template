@@ -400,6 +400,10 @@ start_managed() {
 
 mkdir -p /data/.zeroclaw /data/.zeroclaw/logs /data/.npm-global /data/.npm-cache
 
+# Claude Code workspace + stale session cleanup
+mkdir -p /data/workspace
+rm -rf /data/.claude/remote-sessions 2>/dev/null || true
+
 # npm persistent storage
 npm config set prefix '/data/.npm-global'
 npm config set cache '/data/.npm-cache'

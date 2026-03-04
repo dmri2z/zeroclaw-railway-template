@@ -218,6 +218,31 @@ append_budget_section() {
     # PAYG: no budget section — user manages their own balance
 }
 
+# ─── Claude Code conditional install ─────────────────────────────
+
+install_claude_code() {
+    if [ -z "$BOT_CONFIG_JSON" ]; then
+        return
+    fi
+
+    local enabled
+    enabled=$(echo "$BOT_CONFIG_JSON" | jq -r '.claude_code_enabled // false')
+
+    if [ "$enabled" != "true" ]; then
+        return
+    fi
+
+    # Check if already installed (persists across redeploys via /data/.npm-global)
+    if command -v claude &>/dev/null; then
+        echo "  Claude Code CLI already installed: $(claude --version 2>/dev/null || echo 'unknown version')"
+        return
+    fi
+
+    echo "  Installing Claude Code CLI..."
+    npm install -g @anthropic-ai/claude-code
+    echo "  Claude Code CLI installed: $(claude --version 2>/dev/null || echo 'unknown version')"
+}
+
 # ─── Tenant Validation ───────────────────────────────────────────
 
 validate_tenant_startup() {
@@ -328,6 +353,9 @@ generate_managed_config() {
 
     # Seed USER.md with defaults (only if it doesn't exist — preserves user customizations)
     seed_user_md
+
+    # Install Claude Code CLI if enabled in bot_config
+    install_claude_code
 }
 
 # ─── Start Managed (daemon + sidecars) ───────────────────────────

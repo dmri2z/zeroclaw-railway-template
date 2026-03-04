@@ -38,6 +38,9 @@ RUN ARCH=$([ "$TARGETARCH" = "arm64" ] && echo "aarch64" || echo "x86_64") && \
     | tar -xz -C /usr/local/bin zeroclaw \
     && chmod +x /usr/local/bin/zeroclaw
 
+# Disable Claude Code auto-updater (installed conditionally at boot via start.sh)
+ENV DISABLE_AUTOUPDATER=1
+
 # Configure npm to use persistent storage (survives redeploys)
 ENV NPM_CONFIG_PREFIX=/data/.npm-global
 ENV PATH="/data/.npm-global/bin:$PATH"

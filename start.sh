@@ -327,10 +327,6 @@ generate_managed_config() {
         fi
     done
 
-    # Derive CLI gateway config from BOT_CONFIG_JSON
-    export CLI_GATEWAY_ALLOWED
-    CLI_GATEWAY_ALLOWED=$(echo "$BOT_CONFIG_JSON" | jq -r '.cli_gateway_allowed // "[]"')
-
     # Render config.toml from template + dynamic sections
     render_config
 

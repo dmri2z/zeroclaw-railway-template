@@ -18,11 +18,41 @@ auto_approve = ["*"]
 require_approval_for_medium_risk = false
 block_high_risk_commands = false
 
+# Require approval for high-risk commands instead of blocking them
+[[autonomy.command_context_rules]]
+command = "rm"
+action = "require_approval"
+[[autonomy.command_context_rules]]
+command = "sudo"
+action = "require_approval"
+[[autonomy.command_context_rules]]
+command = "dd"
+action = "require_approval"
+[[autonomy.command_context_rules]]
+command = "chmod"
+action = "require_approval"
+[[autonomy.command_context_rules]]
+command = "chown"
+action = "require_approval"
+[[autonomy.command_context_rules]]
+command = "mkfs"
+action = "require_approval"
+[[autonomy.command_context_rules]]
+command = "shutdown"
+action = "require_approval"
+[[autonomy.command_context_rules]]
+command = "reboot"
+action = "require_approval"
+
+[agent]
+max_tool_iterations = 50
+parallel_tools = true
+
 [gateway]
 host = "0.0.0.0"
 port = 8080
 require_pairing = true
-allow_public_bind = false
+allow_public_bind = true
 
 [browser]
 enabled = true
@@ -34,6 +64,16 @@ native_webdriver_url = "http://127.0.0.1:9515"
 [web_search]
 enabled = true
 provider = "duckduckgo"
+
+[web_fetch]
+enabled = true
+allowed_domains = ["*"]
+
+[goal_loop]
+enabled = true
+
+[multimodal]
+allow_remote_fetch = true
 
 [http_request]
 enabled = true

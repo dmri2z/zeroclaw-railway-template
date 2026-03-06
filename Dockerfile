@@ -104,7 +104,7 @@ ENV SHELL=/bin/bash
 
 # Virtual display for browser & screenshot tools
 ENV DISPLAY=:99
-ENV SCREEN_WIDTH=1366
+ENV SCREEN_WIDTH=1368
 ENV SCREEN_HEIGHT=768
 ENV SCREEN_DEPTH=24
 
